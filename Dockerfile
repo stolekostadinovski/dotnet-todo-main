@@ -13,7 +13,7 @@ RUN dotnet build --configuration Release --no-restore
 RUN dotnet publish --configuration Release --output /app/out --no-restore
 
 # Use a separate stage for the runtime
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
 
 # Copy the built output from the build stage to the runtime stage
