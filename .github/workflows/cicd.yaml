@@ -13,6 +13,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Install GitVersion
+        run: |
+          wget https://github.com/GitTools/GitVersion/releases/download/v5.7.0/GitVersion-5.7.0-linux-x64.tar.gz
+          tar -xvf GitVersion-5.7.0-linux-x64.tar.gz
+          chmod +x ./GitVersion
+          sudo mv ./GitVersion /usr/local/bin/
+
+      - name: Determine version
+        id: version
+        run: gitversion /output json > version.json
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -20,7 +31,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
+        env:
+          VERSION: ${{ fromJson(steps.version.outputs.json).FullSemVer }}
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
-          docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
-
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:$VERSION -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
+          docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:$VERSION
