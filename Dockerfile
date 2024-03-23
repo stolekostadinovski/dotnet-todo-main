@@ -1,23 +1,30 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ Use the official .NET Core SDK image to build the application
+FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build-env
+
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the project file and restore dependencies
-COPY src/TodoApi.csproj .
+# Copy the project files and restore dependencies
+COPY src/*.csproj ./
 RUN dotnet restore
 
-# Copy the entire source code and build the project
-COPY src/ .
-RUN dotnet build --configuration Release --no-restore
+# Copy the remaining source code
+COPY src/ ./
 
-# Publish the project to generate output files
-RUN dotnet publish --configuration Release --output /app/out --no-restore
+# Build the application
+RUN dotnet publish -c Release -o out
 
-# Use a separate stage for the runtime
-FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS runtime
+# Runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:3.1
+
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the built output from the build stage to the runtime stage
-COPY --from=build /app/out .
+# Copy the built app from the build environment
+COPY --from=build-env /app/out .
 
-# Set the entry point for the application
-ENTRYPOINT ["dotnet", "TodoApi.dll"]
+# Expose the port that the application listens on
+EXPOSE 5001
+
+# Command to run the application
+ENTRYPOINT ["dotnet", "app.dll"]
