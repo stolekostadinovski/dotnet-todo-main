@@ -1,5 +1,5 @@
  Use the official .NET Core SDK image to build the application
-FROM mcr.microsoft.com/dotnet/sdk:3.1 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 
 # Set the working directory in the container
 WORKDIR /app
@@ -15,7 +15,7 @@ COPY src/ ./
 RUN dotnet publish -c Release -o out
 
 # Runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 # Set the working directory in the container
 WORKDIR /app
