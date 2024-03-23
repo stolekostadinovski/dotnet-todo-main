@@ -1,4 +1,4 @@
- Use the official .NET Core SDK image to build the application
+# Use the official .NET Core SDK image to build the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
 
 # Set the working directory in the container
