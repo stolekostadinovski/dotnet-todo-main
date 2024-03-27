@@ -14,8 +14,8 @@ jobs:
         run: kubectl get pods -A
       - name: Deploy to minikube
         run: |
-          kubectl apply -f /deploy/pod.yml
-          kubectl apply -f /deploy/service.yaml
+          kubectl apply -f deploy/pod.yml
+          kubectl apply -f deploy/service.yml
       - name: Get resources in the namespace
         run: |
           kubectl get pods -A
