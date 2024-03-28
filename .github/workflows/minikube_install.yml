@@ -23,12 +23,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build and push Docker image
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest .
-          docker tag dotnet-todo-main:latest stolek/dotnet-todo-main:latest
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login myregistry -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
+          docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
 
   deploy_to_minikube:
     runs-on: ubuntu-latest
