@@ -5,7 +5,7 @@ on:
 jobs:
   
   install_minikube:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     name: Install Minikube
     steps:
       - name: Checkout code
@@ -18,7 +18,7 @@ jobs:
         run: minikube status
 
   build_and_push_image:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     name: Build and Push Docker Image
     needs: install_minikube
     steps:
@@ -37,7 +37,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
 
   helm_deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     name: Helm Deploy
     needs: [install_minikube, build_and_push_image]
     steps:
@@ -54,7 +54,7 @@ jobs:
         run: |
           helm install todo-app-v1 helmtodoapp/todoapp-0.1.0.tgz
   test_deployed_app:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     name: Test Deployed App
     needs: [install_minikube, build_and_push_image, helm_deploy]
     steps:
