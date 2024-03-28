@@ -38,7 +38,7 @@ jobs:
   helm_deploy:
     runs-on: ubuntu-latest
     name: Helm Deploy
-    needs: build_and_push_image
+    needs: [install_minikube, build_and_push_image]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -55,7 +55,7 @@ jobs:
   test_deployed_app:
     runs-on: ubuntu-latest
     name: Test Deployed App
-    needs: build_and_push_image
+    needs: [install_minikube, build_and_push_image, helm_deploy]
     steps:
       - name: Get resources in the namespace
         run: |
