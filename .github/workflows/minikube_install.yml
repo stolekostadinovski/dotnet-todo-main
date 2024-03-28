@@ -29,16 +29,37 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
 
-  deploy_and_test:
+  deploy_to_minikube:
     runs-on: ubuntu-latest
-    name: Deploy to Minikube and Test
+    name: Deploy to Minikube
     needs: build_and_push_image
     steps:
-      - uses: actions/checkout@v2
       - name: Deploy to Minikube
         run: |
           kubectl apply -f deploy/pod.yml
           kubectl apply -f deploy/service.yml
+      # Check if deployment was successful
+      - name: Check Deployment Status
+        id: check_deploy
+        run: |
+          if kubectl get pods --field-selector=status.phase=Running | grep -q "todoapp-pod"; then
+            echo "::set-output name=deployed::true"
+          else
+            echo "::set-output name=deployed::false"
+          fi
+      # Retry deployment if it failed
+      - name: Retry Deployment
+        if: steps.check_deploy.outputs.deployed != 'true'
+        run: |
+          kubectl apply -f deploy/pod.yml
+          kubectl apply -f deploy/service.yml
+
+  test_deployed_app:
+    runs-on: ubuntu-latest
+    name: Test Deployed App
+    needs: deploy_to_minikube
+    steps:
+      - uses: actions/checkout@v2
       - name: Get resources in the namespace
         run: |
           kubectl get pods -A
