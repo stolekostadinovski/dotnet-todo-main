@@ -1,15 +1,17 @@
-name: Minikube workflow
+name: Minikube installation 
 on:
   workflow_dispatch:
-
 jobs:
   install_minikube:
     runs-on: ubuntu-latest
     name: Install Minikube
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Start Minikube
         uses: medyagh/setup-minikube@latest
+      
       - name: Minikube status
         run: minikube status
 
@@ -18,38 +20,25 @@ jobs:
     name: Build and Push Docker Image
     needs: install_minikube
     steps:
-      - uses: actions/checkout@v2
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build Docker image
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
-          docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
+          docker build -t myapp:latest .
+          docker tag myapp:latest myregistry/myapp:latest
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login myregistry -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push stolek/dotnet-todo-main
 
   deploy_to_minikube:
     runs-on: ubuntu-latest
     name: Deploy to Minikube
     needs: build_and_push_image
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Deploy to Minikube
-        run: |
-          kubectl apply -f deploy/pod.yml
-          kubectl apply -f deploy/service.yml
-      # Check if deployment was successful
-      - name: Check Deployment Status
-        id: check_deploy
-        run: |
-          if kubectl get pods --field-selector=status.phase=Running | grep -q "todoapp-pod"; then
-            echo "::set-output name=deployed::true"
-          else
-            echo "::set-output name=deployed::false"
-          fi
-      # Retry deployment if it failed
-      - name: Retry Deployment
-        if: steps.check_deploy.outputs.deployed != 'true'
         run: |
           kubectl apply -f deploy/pod.yml
           kubectl apply -f deploy/service.yml
@@ -59,19 +48,22 @@ jobs:
     name: Test Deployed App
     needs: deploy_to_minikube
     steps:
-      - uses: actions/checkout@v2
       - name: Get resources in the namespace
         run: |
           kubectl get pods -A
           kubectl get svc -A  
+
       - name: Wait for Pod to be ready
         run: kubectl wait --for=condition=Ready pod/todoapp-pod --timeout=300s
+
       - name: Curl the endpoint
         run: |
           curl "$(kubectl get nodes -o wide | awk 'NR==2 {print $6}'):30001/todoitems"
+
       - name: Curl PUT data 
         run: |
-           curl -X PUT -H "Content-Type: application/json" -d '{"name":"Dog","description":"dog is walking"}' "$(kubectl get nodes -o wide | awk 'NR==2 {print $6}'):30001/todoitems"
+          curl -X PUT -H "Content-Type: application/json" -d '{"name":"Dog","description":"dog is walking"}' "$(kubectl get nodes -o wide | awk 'NR==2 {print $6}'):30001/todoitems"
+
       - name: Curl the endpoint again 
         run: |
           curl "$(kubectl get nodes -o wide | awk 'NR==2 {print $6}'):30001/todoitems"
