@@ -17,11 +17,7 @@ jobs:
       - name: Minikube status
         run: minikube status
 
-  build_and_push_image:
-    runs-on: ubuntu-latest
-    name: Build and Push Docker Image
-    needs: install_minikube
-    steps:
+ 
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -36,11 +32,6 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest -f Dockerfile .
           docker push ${{ secrets.DOCKER_USERNAME }}/dotnet-todo-main:latest
 
-  helm_deploy:
-    runs-on: ubuntu-latest
-    name: Helm Deploy
-    needs: [install_minikube, build_and_push_image]
-    steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -56,7 +47,7 @@ jobs:
   test_deployed_app:
     runs-on: ubuntu-latest
     name: Test Deployed App
-    needs: [install_minikube, build_and_push_image, helm_deploy]
+    needs: install_minikube
     steps:
       - name: Get resources in the namespace
         run: |
