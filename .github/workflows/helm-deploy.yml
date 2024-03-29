@@ -44,11 +44,7 @@ jobs:
       - name: Deploy Helm chart
         run: |
           helm install todo-app-v1 helmtodoapp/todoapp-0.1.0.tgz
-  test_deployed_app:
-    runs-on: ubuntu-latest
-    name: Test Deployed App
-    needs: install_minikube
-    steps:
+
       - name: Get resources in the namespace
         run: |
           kubectl get pods -A
