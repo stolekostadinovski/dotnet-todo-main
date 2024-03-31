@@ -45,6 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-amd64" # Set Java 8
           .sonar/scanner/sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner \
             -Dsonar.projectKey=stolekostadinovski_dotnet-todo-main \
             -Dsonar.organization=stolekostadinovski \
